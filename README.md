@@ -1,6 +1,6 @@
 # FitFindr 🛍️
 
-FitFindr is a small multi-tool AI agent that helps you search secondhand fashion listings, figure out how a thrifted piece fits into your wardrobe, and generate a shareable “fit card” caption. It’s built as a hands-on exploration of **agentic AI** — not just prompting an LLM, but orchestrating multiple tools, passing state, handling retries, and staying useful when things go wrong.
+FitFindr is a small multi-tool AI agent that helps you search secondhand fashion listings, figure out how a thrifted piece fits into your wardrobe, and generate a shareable “fit card” caption. It’s built as a hands-on exploration of **agentic AI**, orchestrating multiple tools, passing state, handling retries, and staying useful when things go wrong.
 
 ---
 
@@ -96,7 +96,7 @@ Turn the outfit suggestion and thrift item into a 2–4 sentence social caption 
 
 ---
 
-### 4. `compare_listing_value(selected_item, all_listings)` (Extra Credit)
+### 4. `compare_listing_value(selected_item, all_listings)`
 
 **Purpose:**  
 Estimate whether the selected item’s price is a **good deal**, **fair price**, or **overpriced** by comparing it to similar items in the dataset.
@@ -125,7 +125,7 @@ A dict like:
 
 ---
 
-### 5. `save_style_profile(user_id, preferences)` (Extra Credit)
+### 5. `save_style_profile(user_id, preferences)`
 
 **Purpose:**  
 Persist lightweight style preferences between runs (e.g. liked tags, colors, last category).
@@ -154,7 +154,7 @@ Persist lightweight style preferences between runs (e.g. liked tags, colors, las
 
 ---
 
-### 6. `get_style_profile(user_id)` (Extra Credit)
+### 6. `get_style_profile(user_id)`
 
 **Purpose:**  
 Load previously saved style preferences for personalization.
@@ -203,6 +203,32 @@ The loop is **conditional**:
 - It does **not** always call all tools:
   - `suggest_outfit` and `create_fit_card` are skipped if search fails.
   - `compare_listing_value`, `save_style_profile`, and `get_style_profile` are optional extras.
+
+```mermaid
+flowchart TD
+    A[User query + wardrobe] --> B[Create session]
+    B --> C[Parse query into description, size, max_price]
+    C --> D[Load saved style profile]
+    D --> E[Call search_listings]
+    E --> F[Store search_results]
+    F --> G{Any results found?}
+
+    G -- No --> H{Retry available?}
+    H -- Yes --> I[Drop size filter and retry search_listings]
+    I --> E
+    H -- No --> J[Set error and return early]
+
+    G -- Yes --> K[Select top listing]
+    K --> L[Store selected_item]
+    L --> M[Call compare_listing_value]
+    M --> N[Store price_comparison]
+    N --> O[Call suggest_outfit]
+    O --> P[Store outfit_suggestion]
+    P --> Q[Call create_fit_card]
+    Q --> R[Store fit_card]
+    R --> S[Save style profile]
+    S --> T[Return final session]
+```
 
 ---
 
@@ -264,17 +290,17 @@ The goal is that **no tool crash takes down the entire agent** — every failure
 
 ---
 
-## Extra Credit Features Implemented
+## Stretch Features
 
 This project includes three stretch features:
 
-- ✅ **Price comparison tool** (`compare_listing_value`)  
+- **Price comparison tool** (`compare_listing_value`)  
   Estimates whether the thrift item is a good deal, fair price, or overpriced versus similar items.
 
-- ✅ **Style profile memory** (`get_style_profile` / `save_style_profile`)  
+- **Style profile memory** (`get_style_profile` / `save_style_profile`)  
   Persists lightweight style preferences (tags, colors, last category) across sessions for a given `user_id`.
 
-- ✅ **Retry logic with fallback**  
+- **Retry logic with fallback**  
   If search returns no results with a size filter, the agent retries once with `size=None` and explains the failure if it still finds nothing.
 
 ---
